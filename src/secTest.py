@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import random
+import re
 
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/" + "page/" + str(page)
@@ -40,15 +41,19 @@ def getWatchlist(username: str) -> list:
 
     return ret
 
-usernameOne = input('what is the first username? ')
-usernameTwo = input('what is the second username? ')
+text = input('what are the usernames? ')
 
-retOne = getWatchlist(usernameOne)
-retTwo = getWatchlist(usernameTwo)
+usernames = re.findall("([A-Za-z_0-9.]+)", text)
+
+
+retOne = getWatchlist(usernames[0])
+retTwo = getWatchlist(usernames[1])
 
 set = set(retOne).intersection(set(retTwo))
 final = list(set)
 
 randMovie = final[random.randint(0,len(final))]
+
+print(final)
 
 
