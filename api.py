@@ -65,9 +65,13 @@ def send_sms():
             res = MessagingResponse()
             res.message(randMovie)
 
-    return str(res)             
+    return str(res)  
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/test')
+def index():
+    return "server connected"          
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
 
 
