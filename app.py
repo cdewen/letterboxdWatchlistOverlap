@@ -3,7 +3,10 @@ from flask import Flask, request
 from bs4 import BeautifulSoup
 import requests, random
 import re
+import collections
 
+
+final = []
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
@@ -13,9 +16,8 @@ def getWatchlist(username: str) -> list:
     page = [1]
     maxPage: int = 1
     req = BeautifulSoup(requests.get(createUrl(username, 1)).text, "lxml")
-    #or can be
-    #req = requests.get(createUrl(username,1))
-    #req = BeautifulSoup(req.content)
+    req = requests.get(createUrl(username,1))
+    req = BeautifulSoup(req.content)
     pageCount = req.find_all("li", {"class":"paginate-page"})
 
     for item in pageCount:
@@ -30,13 +32,10 @@ def getWatchlist(username: str) -> list:
     while i <= maxPage:
         print(createUrl(username, i))
         soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "lxml")
-        #or can be
-        #soup = requests.get(createUrl(username,1))
-        #soup = BeautifulSoup(req.content)
         data = soup.find_all("li", {"class":"poster-container"})
 
         for item in data:
-            ret.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
+            final.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
         i+=1
 
     return ret
@@ -46,21 +45,27 @@ app = Flask(__name__)
 def send_sms():
     #incoming message
     msg = request.values.get("Body").lower()
-    usernames = re.findall("([A-Za-z_0-9.]+)", msg)
+    if (msg == 'format'):
+        res = MessagingResponse()
+        res.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
+            + " then send and wait for a movie all users have in their watchlist")
+    else:
+        usernames = re.findall("([A-Za-z_0-9.]+)", msg)
 
+        for name in usernames:
+            getWatchlist(name)
 
-    retOne = getWatchlist(usernames[0])
-    retTwo = getWatchlist(usernames[1])
+        if (len(final) < 1):
+            res = MessagingResponse()
+            res.message("there are no overlapping movies in the users' watchlists")
+                
+        else:
+            fin = [item for item, count in collections.Counter(final).items() if count >= len(usernames)]
+            randMovie = random.choice(fin)
+            res = MessagingResponse()
+            res.message(randMovie)
 
-    #set = set(retOne).intersection(set(retTwo))
-    fin = set(retOne).intersection(set(retTwo))
-    final = list(fin)
-
-    randMovie = random.choice(final)
-
-    res = MessagingResponse()
-    res.message(randMovie)
-    return str(res)
+    return str(res)             
 
 if __name__ == '__main__':
     app.run(debug=True)
