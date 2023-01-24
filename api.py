@@ -55,13 +55,16 @@ def send_sms():
         for name in usernames:
             getWatchlist(name)
 
-        if (len(final) < 1):
+        fin = [item for item, count in collections.Counter(final).items() if count >= len(usernames)]
+
+        if (len(fin) < 1):
             res = MessagingResponse()
             res.message("there are no overlapping movies in the users' watchlists")
                 
         else:
-            fin = [item for item, count in collections.Counter(final).items() if count >= len(usernames)]
             randMovie = random.choice(fin)
+            fin.clear()
+            final.clear()
             res = MessagingResponse()
             res.message(randMovie)
 
