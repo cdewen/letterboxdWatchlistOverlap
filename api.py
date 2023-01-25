@@ -16,8 +16,6 @@ def getWatchlist(username: str) -> list:
     page = [1]
     maxPage: int = 1
     req = BeautifulSoup(requests.get(createUrl(username, 1)).text, "html.parser")
-    req = requests.get(createUrl(username,1))
-    req = BeautifulSoup(req.content)
     pageCount = req.find_all("li", {"class":"paginate-page"})
 
     for item in pageCount:
@@ -53,13 +51,6 @@ def send_sms():
         res.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
             + " then send and wait for a movie all users have in their watchlist")
     
-    if (msg == ""):
-        print("sent")
-        fin.clear()
-        final.clear()
-        res = MessagingResponse()
-        res.message("empty message")
-
     else:
         usernames = re.findall("([A-Za-z_0-9.]+)", msg)
 
