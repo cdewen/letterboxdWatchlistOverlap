@@ -78,7 +78,7 @@ def send_sms():
 
 @app.route('/test')
 def index():
-    return "server connected"          
+    return "changed"          
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
