@@ -46,9 +46,16 @@ def send_sms():
     #incoming message
     msg = request.values.get("Body").lower()
     if (msg == 'format'):
+        print("sent")
         res = MessagingResponse()
         res.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
             + " then send and wait for a movie all users have in their watchlist")
+    
+    if (msg == ""):
+        print("sent")
+        res = MessagingResponse()
+        res.message("empty message")
+
     else:
         usernames = re.findall("([A-Za-z_0-9.]+)", msg)
 
@@ -58,6 +65,7 @@ def send_sms():
         fin = [item for item, count in collections.Counter(final).items() if count >= len(usernames)]
 
         if (len(fin) < 1):
+            print("sent")
             res = MessagingResponse()
             res.message("there are no overlapping movies in the users' watchlists")
                 
@@ -65,6 +73,7 @@ def send_sms():
             randMovie = random.choice(fin)
             fin.clear()
             final.clear()
+            print("sent")
             res = MessagingResponse()
             res.message(randMovie)
 
