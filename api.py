@@ -44,12 +44,10 @@ def send_sms():
     #incoming message
     msg = request.values.get("Body").lower()
     if (msg == 'format'):
-        print("sent")
-        fin.clear()
-        final.clear()
         res = MessagingResponse()
         res.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
             + " then send and wait for a movie all users have in their watchlist")
+        print("sent")
     
     else:
         usernames = re.findall("([A-Za-z_0-9.]+)", msg)
