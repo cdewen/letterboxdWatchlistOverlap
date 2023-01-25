@@ -15,7 +15,7 @@ def getWatchlist(username: str) -> list:
     ret = []
     page = [1]
     maxPage: int = 1
-    req = BeautifulSoup(requests.get(createUrl(username, 1)).text, "lxml")
+    req = BeautifulSoup(requests.get(createUrl(username, 1)).text, "html.parser")
     req = requests.get(createUrl(username,1))
     req = BeautifulSoup(req.content)
     pageCount = req.find_all("li", {"class":"paginate-page"})
@@ -31,7 +31,7 @@ def getWatchlist(username: str) -> list:
     i = 1
     while i <= maxPage:
         print(createUrl(username, i))
-        soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "lxml")
+        soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "html.parser")
         data = soup.find_all("li", {"class":"poster-container"})
 
         for item in data:
