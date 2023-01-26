@@ -41,7 +41,7 @@ def getWatchlist(username: str) -> list:
         randBits = bool(random.getrandbits(1))
 
         if randBits:
-            maxPage = 20
+            maxPage = 0.5 * maxPage
             i = 1
             while i <= maxPage:
                 print(createUrl(username, i))
@@ -52,7 +52,7 @@ def getWatchlist(username: str) -> list:
                     final.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
                 i+=1
         else:
-            i = 20
+            i = 0.5 * maxPage
             while i <= maxPage:
                 print(createUrl(username, i))
                 soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "html.parser")
@@ -101,7 +101,14 @@ def send_sms():
 
 @app.route('/test')
 def index():
-    return "changed"          
+    return "changed" 
+
+@app.route('/fail')
+def fail():
+    res = MessagingResponse()
+    res.message("your watchlist is too long just figure it out yourself")
+    print("your watchlist is too long just figure it out yourself") 
+    return "fail"       
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
