@@ -27,16 +27,41 @@ def getWatchlist(username: str) -> list:
     maxPage = max(page)
 
     i = 1
-    while i <= maxPage:
-        print(createUrl(username, i))
-        soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "html.parser")
-        data = soup.find_all("li", {"class":"poster-container"})
+    if (maxPage < 20):
+        while i <= maxPage:
+            print(createUrl(username, i))
+            soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "html.parser")
+            data = soup.find_all("li", {"class":"poster-container"})
 
-        for item in data:
-            final.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
-        i+=1
+            for item in data:
+                final.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
+            i+=1
 
-    return ret
+    else:
+        randBits = bool(random.getrandbits(1))
+
+        if randBits:
+            maxPage = 20
+            i = 1
+            while i <= maxPage:
+                print(createUrl(username, i))
+                soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "html.parser")
+                data = soup.find_all("li", {"class":"poster-container"})
+
+                for item in data:
+                    final.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
+                i+=1
+        else:
+            i = 20
+            while i <= maxPage:
+                print(createUrl(username, i))
+                soup = BeautifulSoup(requests.get(createUrl(username, i)).text, "html.parser")
+                data = soup.find_all("li", {"class":"poster-container"})
+
+                for item in data:
+                    final.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
+                i+=1
+
 
 app = Flask(__name__)
 @app.route('/sms', methods=['POST'])
