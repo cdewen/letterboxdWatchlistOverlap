@@ -91,7 +91,7 @@ def send_sms():
         res = MessagingResponse()
         res.message(result)
         end = time.time()
-        print(f"sent {result} as the random movies in {end - start} seconds")
+        print(f"sent {result} as the random movie between {str(usernames)} in {end - start} seconds")
 
     return str(res)  
 
