@@ -8,6 +8,7 @@ import time
 
 
 allMovies = []
+overlap = []
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
@@ -47,7 +48,6 @@ def getPageMovies(username: str, maxList: list):
     return maxList
 
 def getMovie(usernames: list) -> list:
-    overlap = []
     maxPages = [] #contains the max page for each username
     for name in usernames:
         maxPages.append(getMaxPage(name))
@@ -67,13 +67,13 @@ def getMovie(usernames: list) -> list:
         randMovie = random.choice(overlap)
     else:
         randMovie = "the users have no overlapping movies in their watchlists"
-    overlap.clear()
-    allMovies.clear()
     return randMovie
 
 app = Flask(__name__)
 @app.route('/sms', methods=['POST'])
 def send_sms():
+    allMovies.clear()
+    overlap.clear()
     start = time.time()
     msg = request.values.get("Body").lower()
     if (msg == 'format'):
