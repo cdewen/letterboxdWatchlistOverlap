@@ -38,7 +38,7 @@ def getMaxPage(username):
 
 def getPageMovies(username: str, maxList: list):
     pageNum = maxList.pop(random.randint(0, len(maxList) - 1))
-    #print(createUrl(username, pageNum))
+    print(createUrl(username, pageNum))
     soup = BeautifulSoup(requests.get(createUrl(username, pageNum)).text, "html.parser")
     data = soup.find_all("li", {"class":"poster-container"})
 
@@ -79,7 +79,7 @@ def send_sms():
     start = time.time()
     allMovies.clear()
     msg = request.values.get("Body").lower()
-    message = msg.strip
+    message = msg.strip()
     if (message == 'format'):
         res = MessagingResponse()
         end = time.time()
