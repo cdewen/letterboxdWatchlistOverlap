@@ -6,7 +6,6 @@ import re
 import collections
 import time
 
-
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
@@ -67,6 +66,10 @@ def getMovie(username: list) -> list:
         randMovie = random.choice(overlap)
     else:
         randMovie = "the users have no overlapping movies in their watchlists"
+
+    overlap.clear()
+    maxPages.clear() #contains the max page for each username
+    allMovs.clear()
     return randMovie
 
 app = Flask(__name__)
@@ -74,7 +77,7 @@ app = Flask(__name__)
 def send_sms():
     start = time.time()
     msg = request.values.get("Body").lower()
-    message = msg.strip
+    message = msg.strip()
     if (message == 'format'):
         res = MessagingResponse()
         end = time.time()
