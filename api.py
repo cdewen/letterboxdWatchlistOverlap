@@ -7,7 +7,6 @@ import collections
 import time
 
 
-allMovies = []
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
@@ -36,7 +35,7 @@ def getMaxPage(username):
 
     return max(pageOne)
 
-def getPageMovies(username: str, maxList: list):
+def getPageMovies(username: str, maxList: list, allMovies: list):
     pageNum = maxList.pop(random.randint(0, len(maxList) - 1))
     print(createUrl(username, pageNum))
     soup = BeautifulSoup(requests.get(createUrl(username, pageNum)).text, "html.parser")
@@ -44,13 +43,12 @@ def getPageMovies(username: str, maxList: list):
 
     for item in data:
         allMovies.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
-    return maxList
+    return maxList, allMovies
 
 def getMovie(username: list) -> list:
     overlap = []
-    overlap.clear()
-    allMovies.clear()
     maxPages = [] #contains the max page for each username
+    allMovs = []
     for name in username:
         maxPages.append(getMaxPage(name))
     
@@ -61,42 +59,36 @@ def getMovie(username: list) -> list:
     while(len(overlap) < 1 and bool(any(pageLists))):
         for i in range(len(pageLists)):
             if bool(pageLists[i]):
-                pageLists[i] = getPageMovies(username[i], pageLists[i])
-        overlap = [item for item, count in collections.Counter(allMovies).items() if count >= len(username)]
+                pageLists[i], allMovs = getPageMovies(username[i], pageLists[i], allMovs)
+        overlap = [item for item, count in collections.Counter(allMovs).items() if count >= len(username)]
 
 
     if (len(overlap) > 0):
         randMovie = random.choice(overlap)
     else:
         randMovie = "the users have no overlapping movies in their watchlists"
-    allMovies.clear()
-    overlap.clear()
     return randMovie
 
 app = Flask(__name__)
 @app.route('/sms', methods=['POST'])
 def send_sms():
     start = time.time()
-    allMovies.clear()
     msg = request.values.get("Body").lower()
-    message = msg.strip()
+    message = msg.strip
     if (message == 'format'):
         res = MessagingResponse()
         end = time.time()
-        allMovies.clear()
         res.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
             + " then send and wait for a movie all users have in their watchlist")
         print(f"sent format in {end - start} seconds")
 
     else:
-        allMovies.clear()
         usernames = re.findall("([A-Za-z_0-9.]+)", msg)
         
         result = getMovie(usernames)
 
         res = MessagingResponse()
         res.message(result)
-        allMovies.clear()
         end = time.time()
         print(f"sent {result} as the random movie between {str(usernames)} in {end - start} seconds")
 
