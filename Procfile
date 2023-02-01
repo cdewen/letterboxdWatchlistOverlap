@@ -1,1 +1,1 @@
-web: gunicorn --workers=2 api:app --daemon
+web: nohup gunicorn api:app
