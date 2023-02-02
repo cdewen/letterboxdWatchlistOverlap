@@ -19,10 +19,13 @@ Project is created with:
 * ngrok version: 3.1.1
 	
 ## Setup
-To run this project, install it locally using npm:
+To run this project, install it locally:
 
 ```
-$ cd ../lorem
-$ npm install
-$ npm start
+$ cd ../letterboxdWatchlistOverlap
+$ pip install -r requirements.txt
+$ python3 api.py
+open a new terminal window
+$ ngrok http 5000
 ```
+add the link provided by ngrok as the webhook for a twilio number and now the app is up and running
