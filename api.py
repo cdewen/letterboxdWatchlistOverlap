@@ -39,6 +39,7 @@ def getPageMovies(username: str, maxList: list, allMovies: list):
     print(createUrl(username, pageNum))
     soup = BeautifulSoup(requests.get(createUrl(username, pageNum)).text, "html.parser")
     data = soup.find_all("li", {"class":"poster-container"})
+    #if contains fail value return fail
 
     for item in data:
         allMovies.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
@@ -48,6 +49,27 @@ def getMovie(username: list) -> list:
     overlap = []
     maxPages = [] #contains the max page for each username
     allMovs = []
+    randMovie = ""
+
+    i = 0
+    originalLength = len(username) #used to see if any names were removed
+    length = len(username)
+    invalidUsernames = []
+
+    while i < length:
+        if (validName(username[i])):
+            invalidUsernames.append(username[i])
+            username.pop(i)
+            length-=1
+        else:
+            i+=1
+    
+    if length == 0:
+        return "all usernames entered were invalid. Make sure they were all typed in correctly"
+
+    if length < originalLength:
+        randMovie += f"{invalidUsernames} usernames were invalid. Make sure they were all typed in correctly. The result for the correct usernames are "
+
     for name in username:
         maxPages.append(getMaxPage(name))
     
@@ -63,14 +85,22 @@ def getMovie(username: list) -> list:
 
 
     if (len(overlap) > 0):
-        randMovie = random.choice(overlap)
+        randMovie += random.choice(overlap)
     else:
-        randMovie = "the users have no overlapping movies in their watchlists"
+        randMovie += "the users have no overlapping movies in their watchlists"
 
     overlap.clear()
-    maxPages.clear() #contains the max page for each username
+    maxPages.clear() 
     allMovs.clear()
     return randMovie
+
+def validName(username):
+    errorPage = BeautifulSoup(requests.get(createUrl(username, 1)).text, "html.parser")
+    failure = errorPage.find_all("body", {"class":"error message-dark"})
+
+    if len(failure) > 0:
+        return True
+    return False
 
 app = Flask(__name__)
 @app.route('/sms', methods=['POST'])
@@ -93,7 +123,7 @@ def send_sms():
         res = MessagingResponse()
         res.message(result)
         end = time.time()
-        print(f"sent {result} as the random movie between {str(usernames)} in {end - start} seconds")
+        print(f"sent result was {result} in {end - start} seconds")
 
     return str(res)  
 
