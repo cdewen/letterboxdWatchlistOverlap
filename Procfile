@@ -1,0 +1,1 @@
+web: nohup gunicorn api:app
