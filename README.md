@@ -17,6 +17,7 @@ Project is created with:
 * requests version: 2.27.1
 * twilio version: 7.16.1
 * ngrok version: 3.1.1
+* Heroku 
 	
 ## Setup
 To run this project, install it locally:
