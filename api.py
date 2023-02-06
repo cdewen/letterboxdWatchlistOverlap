@@ -6,7 +6,29 @@ import re
 import collections
 import time
 
-def createUrl(author: str, page: int) -> str:
+def getFriends(username: str) -> list:
+    friends = []
+    urlFollowing = "https://letterboxd.com/" + username + "/following/"
+    urlFollowers = "https://letterboxd.com/" + username + "/followers/"
+
+    followingData = BeautifulSoup(requests.get(urlFollowing).text, "html.parser")
+    following = followingData.find_all("a", {"class":"name"})
+
+    followerData = BeautifulSoup(requests.get(urlFollowers).text, "html.parser")
+    followers = followerData.find_all("a", {"class":"name"})
+
+    data = followers + following
+
+    all = []
+
+    for item in data:
+        all.append(item.getText())
+
+    friends = [item for item, count in collections.Counter(all).items() if count >= 2]
+    
+    return friends
+
+def createWatchlistUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
 
@@ -23,7 +45,7 @@ def createList(r2):
 
 def getMaxPage(username):
     pageOne = [1]
-    req = BeautifulSoup(requests.get(createUrl(username, 1)).text, "html.parser")
+    req = BeautifulSoup(requests.get(createWatchlistUrl(username, 1)).text, "html.parser")
     pageCount = req.find_all("li", {"class":"paginate-page"})
 
     for item in pageCount:
@@ -36,10 +58,9 @@ def getMaxPage(username):
 
 def getPageMovies(username: str, maxList: list, allMovies: list):
     pageNum = maxList.pop(random.randint(0, len(maxList) - 1))
-    print(createUrl(username, pageNum))
-    soup = BeautifulSoup(requests.get(createUrl(username, pageNum)).text, "html.parser")
+    print(createWatchlistUrl(username, pageNum))
+    soup = BeautifulSoup(requests.get(createWatchlistUrl(username, pageNum)).text, "html.parser")
     data = soup.find_all("li", {"class":"poster-container"})
-    #if contains fail value return fail
 
     for item in data:
         allMovies.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
@@ -95,7 +116,7 @@ def getMovie(username: list) -> list:
     return randMovie
 
 def validName(username):
-    errorPage = BeautifulSoup(requests.get(createUrl(username, 1)).text, "html.parser")
+    errorPage = BeautifulSoup(requests.get(createWatchlistUrl(username, 1)).text, "html.parser")
     failure = errorPage.find_all("body", {"class":"error message-dark"})
 
     if len(failure) > 0:
