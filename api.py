@@ -7,7 +7,6 @@ import collections
 import time
 
 def getFriends(username: str) -> list:
-    friends = []
     urlFollowing = "https://letterboxd.com/" + username + "/following/"
     urlFollowers = "https://letterboxd.com/" + username + "/followers/"
 
@@ -22,11 +21,19 @@ def getFriends(username: str) -> list:
     all = []
 
     for item in data:
-        all.append(item.getText())
+        all.append((item.getText()).strip())
 
-    friends = [item for item, count in collections.Counter(all).items() if count >= 2]
+    friendNames = [item for item, count in collections.Counter(all).items() if count >= 2]
+
+    avatars = []
+
+    images = followerData.find_all("a", {"class":"avatar -a40"})
+
+    for image in images:
+        if image.find("img")['alt'] in friendNames:
+           avatars.append(image.find("img")['src'])
     
-    return friends
+    return friendNames, avatars
 
 def createWatchlistUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
