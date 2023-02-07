@@ -10,6 +10,17 @@ def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
 
+def getImage(movie: str) -> str:
+    movie = movie.lower()
+    movie = movie.replace(" ", "-")
+    url = "https://letterboxd.com/film/" + movie + "/"
+
+    soup = str(BeautifulSoup(requests.get(url).text, "html.parser"))
+
+    movieUrl = re.findall("(?<=image\":\")([^\"]+)", soup)
+
+    return movieUrl[0]
+
 def createList(r2):
     r1=1
     res = []
