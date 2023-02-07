@@ -120,9 +120,9 @@ def send_sms():
     msg = request.values.get("Body").lower()
     message = msg.strip()
     if (message == 'format'):
-        res = MessagingResponse()
+        resp = MessagingResponse()
         end = time.time()
-        res.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
+        msg = resp.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
             + " then send and wait for a movie all users have in their watchlist")
         print(f"sent format in {end - start} seconds")
 
@@ -131,12 +131,14 @@ def send_sms():
         
         result = getMovie(usernames)
 
-        res = MessagingResponse()
-        res.message(result)
+        resp = MessagingResponse()
+        msg = resp.message(result)
+        if len(getImage(result)) > 0:
+            msg.media(getImage(result))
         end = time.time()
         print(f"sent result was {result} in {end - start} seconds")
 
-    return str(res)  
+    return str(resp)  
 
 @app.route('/test')
 def index():
@@ -144,10 +146,10 @@ def index():
 
 @app.route('/fail')
 def fail():
-    res = MessagingResponse()
-    res.message("there is too much traffic. We recommend limiting the number of usernames you send in if you sent more than two or if a user has a watchlist that is more than 40 pages long.")
+    resp = MessagingResponse()
+    msg = resp.message("there is too much traffic. We recommend limiting the number of usernames you send in if you sent more than two or if a user has a watchlist that is more than 40 pages long.")
     print("fail") 
-    return "failure"       
+    return str(resp)       
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
