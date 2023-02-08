@@ -1,10 +1,65 @@
 from twilio.twiml.messaging_response import MessagingResponse
-from flask import Flask, request 
+from flask import Flask, request, render_template
 from bs4 import BeautifulSoup
 import requests, random
 import re
 import collections
 import time
+
+def getFriends(username: str) -> list:
+    start = time.time()
+    urlFollowing = "https://letterboxd.com/" + username + "/following/"
+    urlFollowers = "https://letterboxd.com/" + username + "/followers/"
+
+    followingData = BeautifulSoup(requests.get(urlFollowing).text, "html.parser")
+    followingUsernames = followingData.find_all("td", {"class":"table-person"})
+    following = followingData.find_all("a", {"class":"name"})
+
+    followerData = BeautifulSoup(requests.get(urlFollowers).text, "html.parser")
+    followerUsernames = followerData.find_all("td", {"class":"table-person"})
+    followers = followerData.find_all("a", {"class":"name"})
+
+    usernameList = []
+    usernameData = []
+
+    for username in followerUsernames:
+        usernameList.append(username.find("a", {"class":"name"})['href'])
+
+    for username in usernameList:
+        usernameData.append(username.replace("/",""))
+
+    usernameList.clear()
+
+    for username in followingUsernames:
+        usernameList.append(username.find("a", {"class":"name"})['href'])
+
+    for username in usernameList:
+        usernameData.append(username.replace("/",""))
+
+    usernames = [item for item, count in collections.Counter(usernameData).items() if count >= 2]
+
+    data = followers + following
+
+    all = []
+
+    for item in data:
+        all.append((item.getText()).strip())
+
+    friendNames = [item for item, count in collections.Counter(all).items() if count >= 2]
+
+    avatars = []
+
+    images = followerData.find_all("a", {"class":"avatar -a40"})
+
+    for image in images:
+        if image.find("img")['alt'] in friendNames:
+           avatars.append(image.find("img")['src'])
+
+    end = time.time()
+
+    print(end - start)
+    
+    return friendNames, avatars, usernames
 
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
@@ -149,7 +204,25 @@ def fail():
     resp = MessagingResponse()
     msg = resp.message("there is too much traffic. We recommend limiting the number of usernames you send in if you sent more than two or if a user has a watchlist that is more than 40 pages long.")
     print("fail") 
-    return str(resp)       
+    return str(resp)  
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/friends', methods=['POST'])
+def friends():
+    username = request.form['username']
+    friends = getFriends(username)[2]
+    return render_template('friends.html', myFriends=friends, username=username)
+
+@app.route('/movie', methods=['GET', 'POST'])
+def movie():
+    userFriends = request.form.getlist('friend')
+    print(userFriends)
+    movie = getMovie(userFriends)
+    source = getImage(movie)
+    return render_template('movie.html', movie=movie, link = source)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

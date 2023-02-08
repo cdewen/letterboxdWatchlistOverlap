@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+        <title>Friends</title>
+    </head>
+<body>
+    <h1>Friends List</h1>
+    <form class="friend-list" action="{{ url_for('movie') }}" method = 'post'>
+        <input class = 'invisble' type="checkbox" name = 'friend' value = {{username}} checked></input>
+        <br>
+        {% for friend in myFriends %}
+        <input type="checkbox" name='friend' value = {{friend}}>{{friend}}</input>
+        <br>
+        {% endfor %}
+        <input type="submit"></input>
+    </form>
+</body>
+</html>
