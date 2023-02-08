@@ -213,8 +213,8 @@ def home():
 @app.route('/friends', methods=['POST'])
 def friends():
     username = request.form['username']
-    friends = getFriends(username)[2]
-    return render_template('friends.html', myFriends=friends, username=username)
+    friends = getFriends(username)
+    return render_template('friends.html', myFriends=friends[2], username=username,avatars=friends[1])
 
 @app.route('/movie', methods=['GET', 'POST'])
 def movie():
