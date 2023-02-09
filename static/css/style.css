@@ -10,6 +10,8 @@ h1 {
     width: 50%;
     border: 3px solid green;
     padding: 10px;
+    display: flex;
+    flex-direction: column;
 }
 
 form {
@@ -26,3 +28,34 @@ form {
 .invisble {
     opacity: 0.0;
 }
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: left;
+    padding-left: 42%;
+  }
+
+  .inner-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%s
+  }
+  
+  .column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  #avatar {
+    border-radius:32px;
+    height:36px;
+    width:36px;
+    align-self: center;
+  }

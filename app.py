@@ -1,5 +1,4 @@
-from twilio.twiml.messaging_response import MessagingResponse
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for
 from bs4 import BeautifulSoup
 import requests, random
 import re
@@ -74,7 +73,10 @@ def getImage(movie: str) -> str:
 
     movieUrl = re.findall("(?<=image\":\")([^\"]+)", soup)
 
-    return movieUrl
+    if len(movieUrl) > 0:
+        return movieUrl[0]
+    movieUrl.append("https://wompampsupport.azureedge.net/fetchimage?siteId=7575&v=2&jpgQuality=100&width=700&url=https%3A%2F%2Fi.kym-cdn.com%2Fentries%2Ficons%2Ffacebook%2F000%2F000%2F028%2FFail-Stamp-Transparent_copy.jpg")
+    return movieUrl[0]
 
 def createList(r2):
     r1=1
@@ -111,7 +113,7 @@ def getPageMovies(username: str, maxList: list, allMovies: list):
         allMovies.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
     return maxList, allMovies
 
-def getMovie(username: list) -> list:
+def getMovie(username: list):
     overlap = []
     maxPages = [] #contains the max page for each username
     allMovs = []
@@ -169,60 +171,38 @@ def validName(username):
     return False
 
 app = Flask(__name__)
-@app.route('/sms', methods=['POST'])
-def send_sms():
-    start = time.time()
-    msg = request.values.get("Body").lower()
-    message = msg.strip()
-    if (message == 'format'):
-        resp = MessagingResponse()
-        end = time.time()
-        msg = resp.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
-            + " then send and wait for a movie all users have in their watchlist")
-        print(f"sent format in {end - start} seconds")
-
-    else:
-        usernames = re.findall("([A-Za-z_0-9.]+)", msg)
-        
-        result = getMovie(usernames)
-
-        resp = MessagingResponse()
-        msg = resp.message(result)
-        if len(getImage(result)) > 0:
-            msg.media(getImage(result))
-        end = time.time()
-        print(f"sent result was {result} in {end - start} seconds")
-
-    return str(resp)  
-
-@app.route('/test')
-def index():
-    return "work!!!" 
-
-@app.route('/fail')
-def fail():
-    resp = MessagingResponse()
-    msg = resp.message("there is too much traffic. We recommend limiting the number of usernames you send in if you sent more than two or if a user has a watchlist that is more than 40 pages long.")
-    print("fail") 
-    return str(resp)  
-
 @app.route('/')
 def home():
     return render_template('home.html')
 
-@app.route('/friends', methods=['POST'])
-def friends():
+@app.route('/prefriend', methods=['POST'])
+def prefriend():
     username = request.form['username']
-    friends = getFriends(username)
-    return render_template('friends.html', myFriends=friends[2], username=username,avatars=friends[1])
+    return redirect(url_for('friends', name=username))
 
-@app.route('/movie', methods=['POST'])
-def movie():
+@app.route('/friends/<name>')
+def friends(name):
+    friends = getFriends(name)
+    return render_template('friends.html', displayNames=friends[0], usernames=friends[2], username=name, avatars=friends[1])
+
+@app.route('/premovie', methods=['POST'])
+def premovie():
     userFriends = request.form.getlist('friend')
-    print(userFriends)
     movie = getMovie(userFriends)
-    source = getImage(movie)
-    return render_template('movie.html', movie=movie, link = source)
+    if movie != "the users have no overlapping movies in their watchlists":
+        return redirect(url_for('movie', movieName=movie))
+    else:
+        return redirect(url_for('noMovie', movieName=movie))
+
+@app.route('/movie/<movieName>')
+def movie(movieName):
+        source = getImage(movieName)
+        return render_template('movie.html', movie=movieName, link = source)
+
+@app.route('/noMovie')
+def noMovie():
+    movieName = request.args['movieName']
+    return render_template('noMovie.html', movie=movieName)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
