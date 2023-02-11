@@ -1,5 +1,7 @@
 from twilio.twiml.messaging_response import MessagingResponse
 from flask import Flask, request 
+import os
+import tmdbsimple as tmdb
 from bs4 import BeautifulSoup
 import requests, random
 import re
@@ -11,15 +13,26 @@ def createUrl(author: str, page: int) -> str:
     return url
 
 def getImage(movie: str) -> str:
-    movie = movie.lower()
-    movie = movie.replace(" ", "-")
-    url = "https://letterboxd.com/film/" + movie + "/"
+    tmdb.API_KEY = os.environ.get('THE_MOVIE_DB_API_KEY')
 
-    soup = str(BeautifulSoup(requests.get(url).text, "html.parser"))
+    search = tmdb.Search()
+    response = search.movie(query=movie)
+    link = ''
+    highPop = 0.0
+    for s in search.results:
+        #print(s['title'], s['release_date'], s['popularity'])
+        if movie.lower() in str(s['title']).lower():
+            if s['popularity'] >= highPop:
+                highPop = s['popularity']
+                link = s['poster_path']
+        if movie.lower() == str(s['title']).lower():
+            if s['popularity'] >= highPop:
+                highPop = s['popularity']
+                link = s['poster_path']
 
-    movieUrl = re.findall("(?<=image\":\")([^\"]+)", soup)
+    movieUrl = "https://image.tmdb.org/t/p/w500" + link
 
-    return movieUrl[0]
+    return movieUrl
 
 def createList(r2):
     r1=1
@@ -49,11 +62,12 @@ def getPageMovies(username: str, maxList: list, allMovies: list):
     pageNum = maxList.pop(random.randint(0, len(maxList) - 1))
     print(createUrl(username, pageNum))
     soup = BeautifulSoup(requests.get(createUrl(username, pageNum)).text, "html.parser")
-    data = soup.find_all("li", {"class":"poster-container"})
+    data = soup.find_all("div", {"class":"film-poster"})
     #if contains fail value return fail
 
-    for item in data:
-        allMovies.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
+    print(data)
+    #for item in data:
+        #allMovies.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
     return maxList, allMovies
 
 def getMovie(username: list) -> list:
@@ -113,45 +127,29 @@ def validName(username):
         return True
     return False
 
-app = Flask(__name__)
-@app.route('/sms', methods=['POST'])
-def send_sms():
-    start = time.time()
-    msg = request.values.get("Body").lower()
-    message = msg.strip()
-    if (message == 'format'):
-        resp = MessagingResponse()
-        end = time.time()
-        msg = resp.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
-            + " then send and wait for a movie all users have in their watchlist")
-        print(f"sent format in {end - start} seconds")
 
-    else:
-        usernames = re.findall("([A-Za-z_0-9.]+)", msg)
-        
-        result = getMovie(usernames)
 
-        resp = MessagingResponse()
-        msg = resp.message(result)
-        if len(getImage(result)) > 0:
-            msg.media(getImage(result))
-        end = time.time()
-        print(f"sent result was {result} in {end - start} seconds")
+start = time.time()
+msg = "bethwalsh"
+message = msg.strip()
+if (message == 'format'):
+    end = time.time()
+    print("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
+        + " then send and wait for a movie all users have in their watchlist")
+    print(f"sent format in {end - start} seconds")
 
-    return str(resp)  
+else:
+    usernames = re.findall("([A-Za-z_0-9.]+)", msg)
+    
+    result = getMovie(usernames)
 
-@app.route('/test')
-def index():
-    return "work!!!" 
+    end = time.time()
+    print(f"sent result was {result} in {end - start} seconds")
+    print(getImage(result))
 
-@app.route('/fail')
-def fail():
-    resp = MessagingResponse()
-    msg = resp.message("there is too much traffic. We recommend limiting the number of usernames you send in if you sent more than two or if a user has a watchlist that is more than 40 pages long.")
-    print("fail") 
-    return str(resp)       
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+  
+
+
 
 
