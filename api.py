@@ -18,7 +18,7 @@ def getImage(movie: str) -> str:
     tmdb.API_KEY = os.environ.get('THE_MOVIE_DB_API_KEY')
 
     search = tmdb.Search()
-    response = search.movie(query=movie)
+    search.movie(query=movie)
     link = ''
     highPop = 0.0
     for s in search.results:
