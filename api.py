@@ -32,7 +32,7 @@ def getImage(movie: str) -> str:
                 highPop = s['popularity']
                 link = s['poster_path']
 
-    movieUrl = "https://image.tmdb.org/t/p/w500" + link
+    movieUrl = "https://image.tmdb.org/t/p/w300" + link
 
     if movieUrl == "https://image.tmdb.org/t/p/w500":
         movieUrl = "https://ih1.redbubble.net/image.954472830.8946/st,small,845x845-pad,1000x1000,f8f8f8.u2.jpg"
