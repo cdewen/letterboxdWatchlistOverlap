@@ -1,25 +1,43 @@
 from twilio.twiml.messaging_response import MessagingResponse
 from flask import Flask, request 
+import os
+import tmdbsimple as tmdb
 from bs4 import BeautifulSoup
 import requests, random
 import re
 import collections
 import time
 
+
+
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
 
 def getImage(movie: str) -> str:
-    movie = movie.lower()
-    movie = movie.replace(" ", "-")
-    url = "https://letterboxd.com/film/" + movie + "/"
+    tmdb.API_KEY = os.environ.get('THE_MOVIE_DB_API_KEY')
 
-    soup = str(BeautifulSoup(requests.get(url).text, "html.parser"))
+    search = tmdb.Search()
+    response = search.movie(query=movie)
+    link = ''
+    highPop = 0.0
+    for s in search.results:
+        #print(s['title'], s['release_date'], s['popularity'])
+        if movie.lower() in str(s['title']).lower():
+            if s['popularity'] >= highPop:
+                highPop = s['popularity']
+                link = s['poster_path']
+        if movie.lower() == str(s['title']).lower():
+            if s['popularity'] >= highPop:
+                highPop = s['popularity']
+                link = s['poster_path']
 
-    movieUrl = re.findall("(?<=image\":\")([^\"]+)", soup)
+    movieUrl = "https://image.tmdb.org/t/p/w500" + link
 
-    return movieUrl[0]
+    if movieUrl == "https://image.tmdb.org/t/p/w500":
+        movieUrl = "https://ih1.redbubble.net/image.954472830.8946/st,small,845x845-pad,1000x1000,f8f8f8.u2.jpg"
+
+    return movieUrl
 
 def createList(r2):
     r1=1
@@ -52,11 +70,17 @@ def getPageMovies(username: str, maxList: list, allMovies: list):
     data = soup.find_all("li", {"class":"poster-container"})
     #if contains fail value return fail
 
+    #print(data)
+
+    pageMovies = []
     for item in data:
-        allMovies.append(str(item.find("img", {"class":"image"})['alt']).encode("ascii", errors="ignore").decode("utf-8"))
+        pageMovies.append(str(item.find("div", {"class":"film-poster"})['data-film-slug']).encode("ascii", errors="ignore").decode("utf-8"))
+
+    allMovies.extend(pageMovies)
     return maxList, allMovies
 
 def getMovie(username: list) -> list:
+    starter = time.time()
     overlap = []
     maxPages = [] #contains the max page for each username
     allMovs = []
@@ -90,13 +114,21 @@ def getMovie(username: list) -> list:
     
     while(len(overlap) < 1 and bool(any(pageLists))):
         for i in range(len(pageLists)):
+            ender = time.time()
+            if (ender-starter) > 13:
+                return "no matches found soon enough"
             if bool(pageLists[i]):
                 pageLists[i], allMovs = getPageMovies(username[i], pageLists[i], allMovs)
         overlap = [item for item, count in collections.Counter(allMovs).items() if count >= len(username)]
 
 
     if (len(overlap) > 0):
-        randMovie += random.choice(overlap)
+        #get movie name from url
+        url = random.choice(overlap)
+        finUrl = "https://letterboxd.com" + url
+        soup = BeautifulSoup(requests.get(finUrl).text, "html.parser")
+        data = soup.find("img", {"class":"image"})['alt']
+        randMovie = data
     else:
         randMovie += "the users have no overlapping movies in their watchlists"
 
@@ -113,6 +145,9 @@ def validName(username):
         return True
     return False
 
+
+
+
 app = Flask(__name__)
 @app.route('/sms', methods=['POST'])
 def send_sms():
@@ -126,17 +161,22 @@ def send_sms():
             + " then send and wait for a movie all users have in their watchlist")
         print(f"sent format in {end - start} seconds")
 
+
     else:
         usernames = re.findall("([A-Za-z_0-9.]+)", msg)
         
         result = getMovie(usernames)
 
-        resp = MessagingResponse()
-        msg = resp.message(result)
-        if len(getImage(result)) > 0:
+        if (result == "no matches found soon enough"):
+            resp = MessagingResponse()
+            msg = resp.message("we searched so much of your watchlists and couln't find any matches but you might have one just stop being such a movie nerd")
+            print("couldn't find movie in time")
+        else:
+            resp = MessagingResponse()
+            msg = resp.message(result)
             msg.media(getImage(result))
-        end = time.time()
-        print(f"sent result was {result} in {end - start} seconds")
+            end = time.time()
+            print(f"sent result was {result} in {end - start} seconds")
 
     return str(resp)  
 
