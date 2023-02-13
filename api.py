@@ -137,8 +137,6 @@ def validName(username):
     return False
 
 
-
-
 app = Flask(__name__)
 @app.route('/sms', methods=['POST'])
 def send_sms():
@@ -172,9 +170,10 @@ def send_sms():
 
     return str(resp)  
  
-@app.rout('/test')
+@app.route('/test')
 def test():
-    print('test')
+    print("test")
+    return("test")
 
 @app.route('/fail')
 def fail():
