@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="{{ url_for('static', filename= 'scss/test.scss') }}">
+        <title>Friends</title>
+    </head>
+<body>
+    <select multiple>
+        <option title="Option 1">Option 1</option>
+        <option title="Option 2">Option 2</option>
+        <option title="Option 3">Option 3</option>
+        <option title="Option 4">Option 4</option>
+        <option title="Option 5">Option 5</option>
+        <option title="Option 6">Option 6</option>
+        <option title="Option 7">Option 7</option>
+        <option title="Option 8">Option 8</option>
+        <option title="Option 9">Option 9</option>
+        <option title="Option 10">Option 10</option>
+        <option title="Option 11">Option 11</option>
+        <option title="Option 12">Option 12</option>
+        <option title="Option 13">Option 13</option>
+        <option title="Option 14">Option 14</option>
+      </select>
+
+      <script>
+        $('option').mousedown(function(e) {
+            e.preventDefault();
+            var originalScrollTop = $(this).parent().scrollTop();
+            console.log(originalScrollTop);
+            $(this).prop('selected', $(this).prop('selected') ? false : true);
+            var self = this;
+            $(this).parent().focus();
+            setTimeout(function() {
+                $(self).parent().scrollTop(originalScrollTop);
+            }, 0);
+            
+            return false;
+        });</script>
+</body>
+</html>
