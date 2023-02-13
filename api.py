@@ -8,36 +8,29 @@ import re
 import collections
 import time
 
-
-
 def createUrl(author: str, page: int) -> str:
     url = "https://letterboxd.com/" + author + "/watchlist/page/" + str(page) + "/"
     return url
 
-def getImage(movie: str) -> str:
+def getImage(movie: int) -> str:
     tmdb.API_KEY = os.environ.get('THE_MOVIE_DB_API_KEY')
 
-    search = tmdb.Search()
-    search.movie(query=movie)
-    link = ''
-    highPop = 0.0
-    for s in search.results:
-        #print(s['title'], s['release_date'], s['popularity'])
-        if movie.lower() in str(s['title']).lower():
-            if s['popularity'] >= highPop:
-                highPop = s['popularity']
-                link = s['poster_path']
-        if movie.lower() == str(s['title']).lower():
-            if s['popularity'] >= highPop:
-                highPop = s['popularity']
-                link = s['poster_path']
+    movie = tmdb.Movies(movie)
+    response = movie.info()
+    link = movie.poster_path
 
     movieUrl = "https://image.tmdb.org/t/p/w300" + link
 
-    if movieUrl == "https://image.tmdb.org/t/p/w500":
-        movieUrl = "https://ih1.redbubble.net/image.954472830.8946/st,small,845x845-pad,1000x1000,f8f8f8.u2.jpg"
-
     return movieUrl
+
+def getTitle(movie: int) -> str:
+    tmdb.API_KEY = os.environ.get('THE_MOVIE_DB_API_KEY')
+
+    movie = tmdb.Movies(movie)
+    response = movie.info()
+    title = movie.title
+
+    return title
 
 def createList(r2):
     r1=1
@@ -71,12 +64,9 @@ def getPageMovies(username: str, maxList: list, allMovies: list):
     #if contains fail value return fail
 
     #print(data)
-
-    pageMovies = []
     for item in data:
-        pageMovies.append(str(item.find("div", {"class":"film-poster"})['data-film-slug']).encode("ascii", errors="ignore").decode("utf-8"))
+        allMovies.append(item.find("div", {"class":"film-poster"})['data-film-slug'])
 
-    allMovies.extend(pageMovies)
     return maxList, allMovies
 
 def getMovie(username: list) -> list:
@@ -100,7 +90,7 @@ def getMovie(username: list) -> list:
             i+=1
     
     if length == 0:
-        return "all usernames entered were invalid. Make sure they were all typed in correctly"
+        return "all usernames entered were invalid. Make sure they were all typed in correctly", 0
 
     if length < originalLength:
         randMovie += f"{invalidUsernames} usernames were invalid. Make sure they were all typed in correctly. The result for the correct usernames are "
@@ -116,26 +106,27 @@ def getMovie(username: list) -> list:
         for i in range(len(pageLists)):
             ender = time.time()
             if (ender-starter) > 13:
-                return "no matches found soon enough"
+                return "no matches found soon enough", 0
             if bool(pageLists[i]):
                 pageLists[i], allMovs = getPageMovies(username[i], pageLists[i], allMovs)
         overlap = [item for item, count in collections.Counter(allMovs).items() if count >= len(username)]
 
 
+    tmdbID = 0
     if (len(overlap) > 0):
-        #get movie name from url
-        url = random.choice(overlap)
-        finUrl = "https://letterboxd.com" + url
-        soup = BeautifulSoup(requests.get(finUrl).text, "html.parser")
-        data = soup.find("img", {"class":"image"})['alt']
-        randMovie = data
+        link = "https://letterboxd.com" + random.choice(overlap)
+        soup = BeautifulSoup(requests.get(link).text, "html.parser")
+        tmdbID = soup.find('body')['data-tmdb-id']
+        randMovie = getTitle(tmdbID)
+
+        
     else:
         randMovie += "the users have no overlapping movies in their watchlists"
 
     overlap.clear()
     maxPages.clear() 
     allMovs.clear()
-    return randMovie
+    return randMovie, tmdbID
 
 def validName(username):
     errorPage = BeautifulSoup(requests.get(createUrl(username, 1)).text, "html.parser")
@@ -167,22 +158,23 @@ def send_sms():
         
         result = getMovie(usernames)
 
-        if (result == "no matches found soon enough"):
+        if (result[0] == "no matches found soon enough"):
             resp = MessagingResponse()
             msg = resp.message("we searched so much of your watchlists and couln't find any matches but you might have one just stop being such a movie nerd")
             print("couldn't find movie in time")
         else:
             resp = MessagingResponse()
-            msg = resp.message(result)
-            msg.media(getImage(result))
+            msg = resp.message(result[0])
+            if result[1] != 0:
+                msg.media(getImage(result[1]))
             end = time.time()
             print(f"sent result was {result} in {end - start} seconds")
 
     return str(resp)  
-
-@app.route('/test')
-def index():
-    return "work!!!" 
+ 
+@app.rout('/test')
+def test():
+    print('test')
 
 @app.route('/fail')
 def fail():
@@ -193,5 +185,3 @@ def fail():
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
-
-
