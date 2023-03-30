@@ -23,6 +23,7 @@ Project is created with:
 To run this project, install it locally:
 
 ```
+$ git clone https://github.com/cdewen/letterboxdWatchlistOverlap.git
 $ cd ../letterboxdWatchlistOverlap
 $ pip install -r requirements.txt
 $ python3 api.py
