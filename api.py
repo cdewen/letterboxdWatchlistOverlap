@@ -12,7 +12,7 @@ def send_sms():
     start = time.time()
     msg = request.values.get("Body").lower()
     message = msg.strip()
-    if (message == "repeat"):
+    if (message == "repeat" or message == "\'repeat\'"):
         number = request.values.get("From")
         print(number)
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
@@ -50,11 +50,10 @@ def send_sms():
         print(f"received {message} and sent: {movie} in {end - start} seconds")
         return str(resp)
 
-    elif (message == 'format' or message == 'help'):
+    elif (message == 'format' or message == '\'format\''):
         resp = MessagingResponse()
         end = time.time()
-        msg = resp.message("type in any number of usernames seperated by a space or a non-valid character of your choice (ex. / or :) and" 
-            + " then send and wait for a movie all users have in their watchlist")
+        msg = resp.message("Welcome to BoxdMe! \n To receive a movie just type in any number of usernames seperated by a space and then send! \n If you want to get another random movie with the same usernames, just type in 'repeat' \n If you want to see this message again just type in ‘format’")
         print(f"sent format in {end - start} seconds")
         return str(resp)
     
