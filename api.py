@@ -53,7 +53,7 @@ def send_sms():
     elif (message == 'format' or message == '\'format\''):
         resp = MessagingResponse()
         end = time.time()
-        msg = resp.message("Welcome to BoxdMe! \n \nTo receive a movie just type in any number of Letterboxd usernames seperated by a space and then send! \n \nIf you want to get another random movie with the same usernames, just type in 'repeat'\n \n If you want to see this message again just type in ‘format’")
+        msg = resp.message("Welcome to BoxdMe! \n \nTo receive a movie just type in any number of Letterboxd usernames seperated by a space and then send! \n \nIf you want to get another random movie with the same usernames, just type in 'repeat'\n \nIf you want to see this message again just type in ‘format’")
         print(f"sent format in {end - start} seconds")
         return str(resp)
     
